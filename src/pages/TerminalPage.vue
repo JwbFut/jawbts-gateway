@@ -37,7 +37,7 @@ function printError(error: unknown): void {
 
 function welcome(): void {
   const name = auth.username ?? 'there'
-  print('output', `${SITE_NAME} Gateway [Version ${BUILD_HASH}]`)
+  print('output', `${SITE_NAME} Gateway [Build ${BUILD_HASH}]`)
   print('output', LICENSE_NOTICE)
   print('output', '')
   print('output', `Good ${greetingFor()}, ${name}.`)
