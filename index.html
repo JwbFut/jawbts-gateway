@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#0a0f0c" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta
+      name="description"
+      content="Jawbts — sign in, manage your email and sessions, and issue scoped API tokens."
+    />
+    <link rel="icon" type="image/png" href="https://cdn.jawbts.org/photos/logo.png" />
+    <link rel="apple-touch-icon" href="https://cdn.jawbts.org/photos/logo.png" />
+    <title>Jawbts</title>
+    <script src="/spa-redirect.js"></script>
+    <style>
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+        background: #0a0f0c;
+        color: #c9d6cf;
+        font-family: 'Segoe UI', ui-sans-serif, system-ui, -apple-system, Roboto, sans-serif;
+      }
+      #app {
+        min-height: 100vh;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <noscript>
+      <p style="text-align: center; padding: 2rem; color: #c9d6cf">
+        Jawbts requires JavaScript to sign in and manage tokens.
+      </p>
+    </noscript>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

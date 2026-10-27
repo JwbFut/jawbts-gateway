@@ -1,0 +1,46 @@
+{
+  "name": "jawbts-gateway",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "license": "GPL-3.0-only",
+  "description": "Static Vue SPA frontend for jawbts-api: login, email settings, sessions, and scoped token issuance.",
+  "scripts": {
+    "dev": "vite --port 3001",
+    "build": "npm run type-check && vite build",
+    "build-only": "vite build",
+    "preview": "vite preview --port 3001",
+    "type-check": "vue-tsc --noEmit",
+    "mock-api": "node scripts/mock-api.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "check": "npm run type-check && npm run lint && npm run test"
+  },
+  "dependencies": {
+    "pinia": "^3.0.3",
+    "vue": "^3.5.17",
+    "vue-router": "^4.5.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "@tailwindcss/vite": "^4.1.10",
+    "@types/node": "^22.15.33",
+    "@vitejs/plugin-vue": "^6.0.0",
+    "@vue/tsconfig": "^0.7.0",
+    "eslint": "^9.39.5",
+    "eslint-plugin-vue": "^10.11.1",
+    "globals": "^17.13.0",
+    "tailwindcss": "^4.1.10",
+    "typescript": "~5.8.3",
+    "typescript-eslint": "^8.71.2",
+    "vite": "^7.0.0",
+    "vitest": "^5.0.5",
+    "vue-eslint-parser": "^10.4.1",
+    "vue-tsc": "^2.2.10"
+  },
+  "engines": {
+    "node": ">=20.19.0"
+  }
+}

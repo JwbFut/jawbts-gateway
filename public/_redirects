@@ -1,0 +1,2 @@
+# Netlify / Cloudflare Pages SPA fallback. Static assets are served first.
+/* /index.html 200

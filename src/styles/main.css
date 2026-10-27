@@ -1,0 +1,69 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-sea-300: #8fd3c7;
+}
+
+@layer base {
+  html,
+  body {
+    @apply m-0 min-h-full bg-[#0a0f0c] text-[#c9d6cf] antialiased;
+  }
+
+  body {
+    font-family: 'Segoe UI', ui-sans-serif, system-ui, -apple-system, Roboto, sans-serif;
+  }
+
+  #app {
+    min-height: 100vh;
+  }
+
+  button,
+  input {
+    font: inherit;
+  }
+
+  a {
+    color: inherit;
+  }
+
+  ::selection {
+    background: #7ee787;
+    color: #0a0f0c;
+  }
+
+  :focus-visible {
+    outline: 1px solid #7ee787;
+    outline-offset: 2px;
+  }
+}
+
+.terminal-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #2b3a32 transparent;
+  /* Terminal output is a transcript: allow selecting and copying it. */
+  user-select: text;
+  -webkit-user-select: text;
+  cursor: text;
+}
+
+.terminal-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.terminal-scroll::-webkit-scrollbar-thumb {
+  background: #2b3a32;
+  border-radius: 999px;
+}
+
+/* Respect the OS "reduce motion" setting for every decorative animation. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

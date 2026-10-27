@@ -1,0 +1,98 @@
+.variableSpeedFade {
+  opacity: 0;
+  animation: customFadeIn 1s forwards;
+}
+
+@keyframes customFadeIn {
+  0% {
+    opacity: 0;
+  }
+  40% {
+    opacity: 0.01;
+    animation-timing-function: ease-in;
+  }
+  60% {
+    opacity: 0.4;
+    animation-timing-function: ease-out;
+  }
+  100% {
+    opacity: 1;
+    animation-timing-function: ease-in;
+  }
+}
+
+.bannerBorder {
+  display: inline-block;
+  border-bottom: solid 3px;
+  border-top: solid 3px;
+  margin: 0 0 2em 0;
+  padding: 3px 0 3px 0;
+}
+
+.bannerDiv {
+  animation-fill-mode: forwards;
+  color: #fff;
+  display: inline-block;
+  text-align: center;
+}
+
+/* Decorative full-screen background: never draggable or selectable. */
+.backgroundImage {
+  -webkit-user-drag: none;
+  user-select: none;
+  pointer-events: none;
+}
+
+.logoBrightness {
+  animation: logoBrightness 0.8s ease-in-out;
+}
+
+@keyframes logoBrightness {
+  0% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.2);
+  }
+  100% {
+    filter: brightness(1);
+  }
+}
+
+
+/* Touch devices have no hover: keep the form discoverable without changing
+   the desktop reveal behavior. */
+.touchInput::placeholder {
+  color: transparent;
+}
+
+@media (hover: none), (max-width: 640px) {
+  .touchReveal {
+    color: #fff;
+  }
+
+  .touchButton {
+    border-color: #fff;
+    color: #fff;
+  }
+
+  /* The quote and tagline are hover-revealed on desktop; on touch there is no
+     hover, so show them instead of leaving transparent text. */
+  .touchQuote {
+    color: #fff !important;
+    transition: none;
+  }
+
+  .touchInput::placeholder {
+    color: rgba(255, 255, 255, 0.45);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .variableSpeedFade,
+  .logoBrightness {
+    animation: none !important;
+    opacity: 1 !important;
+    filter: none !important;
+  }
+}

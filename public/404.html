@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Jawbts Gateway</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+        background: #0a0f0c;
+        color: #c9d6cf;
+        font-family: 'Segoe UI', ui-sans-serif, system-ui, -apple-system, Roboto, sans-serif;
+      }
+      p {
+        padding: 2rem;
+        text-align: center;
+      }
+    </style>
+    <script>
+      // GitHub Pages has no rewrite support. Serve this file for unknown paths,
+      // remember the intended URL, and reload the SPA at the root. index.html
+      // restores the URL before Vue Router reads window.location.
+      (function () {
+        var target = window.location.pathname + window.location.search + window.location.hash;
+        try {
+          window.sessionStorage.setItem('jawbts.gateway.spa_redirect', target);
+        } catch (error) {
+          /* sessionStorage may be unavailable; the home page is still safe. */
+        }
+        window.location.replace('/');
+      })();
+    </script>
+  </head>
+  <body>
+    <p>Redirecting to Jawbts Gateway…</p>
+  </body>
+</html>
