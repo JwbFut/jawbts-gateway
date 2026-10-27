@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 
 import { useAuthStore } from '@/stores/auth'
 
@@ -47,6 +47,61 @@ function focus(): void {
   inputEl.value?.focus()
 }
 
+function focusUnlessSelecting(): void {
+  const selection = window.getSelection()
+  if (selection && !selection.isCollapsed) {
+    return
+  }
+  focus()
+}
+
+function isEditableTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) {
+    return false
+  }
+  return (
+    target instanceof HTMLInputElement ||
+    target instanceof HTMLTextAreaElement ||
+    target instanceof HTMLSelectElement ||
+    target.isContentEditable
+  )
+}
+
+/**
+ * The terminal should accept typing even after focus was lost to a click on
+ * the transcript. If the target is not an editable field, focus the command
+ * input and replay the key that started the sequence.
+ */
+function onGlobalKeydown(event: KeyboardEvent): void {
+  if (event.defaultPrevented || event.isComposing || props.disabled) {
+    return
+  }
+  if (event.metaKey || event.ctrlKey || event.altKey) {
+    return
+  }
+  if (isEditableTarget(event.target)) {
+    return
+  }
+  if (event.key === 'Enter') {
+    event.preventDefault()
+    focus()
+    submit()
+    return
+  }
+  if (event.key === 'Backspace') {
+    event.preventDefault()
+    focus()
+    value.value = value.value.slice(0, -1)
+    return
+  }
+  if (event.key.length !== 1) {
+    return
+  }
+  event.preventDefault()
+  focus()
+  value.value += event.key
+}
+
 function scrollToBottom(): void {
   void nextTick(() => {
     if (scrollEl.value) {
@@ -58,14 +113,20 @@ function scrollToBottom(): void {
 defineExpose({ focus, scrollToBottom })
 
 onMounted(() => {
+  window.addEventListener('keydown', onGlobalKeydown)
   focus()
   scrollToBottom()
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', onGlobalKeydown)
 })
 </script>
 
 <template>
   <div
     class="flex h-[100dvh] flex-col overflow-hidden bg-[#0a0f0c] font-mono text-[#c9d6cf]"
+    @click="focusUnlessSelecting"
   >
     <header
       class="flex shrink-0 items-center justify-between gap-3 border-b border-[#1b2620] px-4 py-2 text-[11px] uppercase tracking-[0.18em] text-[#61756a]"
@@ -80,7 +141,6 @@ onMounted(() => {
       role="log"
       aria-live="polite"
       aria-label="Terminal output"
-      @click.self="focus"
     >
       <slot />
     </main>
