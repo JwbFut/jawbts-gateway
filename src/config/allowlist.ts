@@ -33,6 +33,13 @@ export const BUILT_IN_ALLOWED_HOSTS: readonly AllowedHostRule[] = [
   // only while all subdomains are owned by the same team: the API does not
   // receive the post-consent redirect URI, so this list is the destination guard.
   { host: 'jawbts.org', includeSubdomains: true, allowHttp: false },
+  // Exact callback host for one Chrome extension. Do not trust all of
+  // chromiumapp.org or subdomains of this host.
+  {
+    host: 'odmbeiacmbcldnhlmgnpggclajmpebhh.chromiumapp.org',
+    includeSubdomains: false,
+    allowHttp: false,
+  },
   ...LOCAL_HOSTS,
 ]
 

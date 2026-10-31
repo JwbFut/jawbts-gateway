@@ -15,6 +15,13 @@ describe('matchAllowedHost', () => {
     expect(matchAllowedHost('notjawbts.org')).toBeNull()
   })
 
+  it('trusts the Chromium extension callback host exactly, without subdomains', () => {
+    const host = 'odmbeiacmbcldnhlmgnpggclajmpebhh.chromiumapp.org'
+    expect(matchAllowedHost(host)?.matchedDomain).toBe(host)
+    expect(matchAllowedHost(host)?.viaSubdomain).toBe(false)
+    expect(matchAllowedHost(`evil.${host}`)).toBeNull()
+  })
+
   it('includes localhost in the test/development build', () => {
     expect(matchAllowedHost('localhost')?.rule.allowHttp).toBe(true)
     expect(describeAllowedHosts().some((entry) => entry.startsWith('localhost'))).toBe(true)
