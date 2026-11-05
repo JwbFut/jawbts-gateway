@@ -7,6 +7,7 @@ import TerminalShell from '@/components/TerminalShell.vue'
 import { BUILD_HASH, LICENSE_NOTICE, SITE_NAME } from '@/config/app'
 import { describeError, describeErrorLines } from '@/lib/errors'
 import { formatDate, formatDateTime, formatRelative } from '@/lib/format'
+import { groupSessions } from '@/lib/sessions'
 import { redactCommand, type TerminalEntry, type TerminalKind } from '@/lib/terminal'
 import { greetingFor } from '@/lib/welcome'
 import { useAuthStore } from '@/stores/auth'
@@ -138,29 +139,41 @@ async function sessionsCommand(): Promise<void> {
   await runBusy(async () => {
     try {
       const result = await auth.listSessions()
-      const parents = result.sessions.filter((session) => session.type === 'GITHUB_LOGIN')
+      const { logins, delegated, other } = groupSessions(
+        result.sessions,
+        auth.currentSessionId,
+      )
+
       print('output', 'login sessions')
-      if (parents.length === 0) {
+      if (logins.length === 0) {
         print('muted', '  none')
       }
-      for (const parent of parents) {
-        const refresh =
-          result.sessions.find(
-            (session) => session.type === 'REFRESH_TOKEN' && session.parentId === parent.id,
-          ) ?? null
-        const current = refresh?.id === auth.currentSessionId
-        print('output', `  ${parent.id}${current ? ' (current)' : ''}`)
-        print(
-          'muted',
-          `    refresh ${refresh?.id ?? 'pending'} · created ${formatDateTime(
-            parent.createdAt,
-          )} · expires ${formatRelative(refresh?.expiresAt ?? parent.expiresAt)}`,
-        )
+      for (const login of logins) {
+        const current = login.current ? ' (current)' : ''
+        const pending = login.state === 'pending' ? ' (pending)' : ''
+        print('output', `  ${login.id}${current}${pending}`)
+        if (login.state === 'pending') {
+          print(
+            'muted',
+            `    awaiting GitHub authorization · expires ${formatRelative(login.expiresAt)}`,
+          )
+        } else if (login.refreshId && login.refreshId !== login.id) {
+          print(
+            'muted',
+            `    refresh ${login.refreshId} · created ${formatDateTime(
+              login.createdAt,
+            )} · expires ${formatRelative(login.expiresAt)}`,
+          )
+        } else {
+          print(
+            'muted',
+            `    created ${formatDateTime(login.createdAt)} · expires ${formatRelative(
+              login.expiresAt,
+            )}`,
+          )
+        }
       }
 
-      const delegated = result.sessions
-        .filter((session) => session.type === 'DELEGATED_TOKEN')
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
       print('output', 'delegated tokens')
       if (delegated.length === 0) {
         print('muted', '  none')
@@ -173,6 +186,13 @@ async function sessionsCommand(): Promise<void> {
             session.permissions.join(' ') || 'no scopes'
           } · ${formatRelative(session.expiresAt)}`,
         )
+      }
+
+      if (other.length > 0) {
+        print('output', 'other sessions')
+        for (const session of other) {
+          print('muted', `  ${session.id} · ${session.type}`)
+        }
       }
       print('muted', 'usage: revoke <session-id>')
     } catch (caught) {

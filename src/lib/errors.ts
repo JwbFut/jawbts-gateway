@@ -160,6 +160,15 @@ export function sessionLimitInfo(error: unknown): { active: number | null; limit
 }
 
 /**
+ * The most specific human-readable message carried by an API error. Mirrors
+ * `describeError` without the presentation fallbacks.
+ */
+function apiMessage(error: ApiError): string | null {
+  const data = asRecord(error.data)
+  return stringValue(data?.message) ?? stringValue(data?.reason) ?? stringValue(error.envelopeMessage)
+}
+
+/**
  * Extra, muted terminal lines that explain an API error: field issues, missing
  * scopes, rate-limit retry hints, session caps, and the business code. The API
  * supplies all of this; without it, a Zod failure reads only "Bad Request".
@@ -177,10 +186,23 @@ export function describeErrorLines(error: unknown): string[] {
   }
   if (isSessionLimitError(error)) {
     const { active, limit } = sessionLimitInfo(error)
+    // Code 10004 covers two different caps: in-flight GitHub logins (which
+    // expire on their own) and live delegated tokens (which can be revoked).
+    // The API's message says which one, so follow it instead of always telling
+    // the user to revoke a session.
+    const message = apiMessage(error) ?? ''
     if (active !== null && limit !== null) {
-      lines.push(`Active sessions: ${active} of ${limit}; revoke one to free a slot.`)
+      if (/delegated/i.test(message)) {
+        lines.push(`Active delegated tokens: ${active} of ${limit}; revoke one to free a slot.`)
+      } else if (/login/i.test(message)) {
+        lines.push(
+          `GitHub logins in progress: ${active} of ${limit}; finish one or let it expire.`,
+        )
+      } else {
+        lines.push(`Active: ${active} of ${limit}.`)
+      }
     } else if (limit !== null) {
-      lines.push(`Session limit: ${limit}; revoke one to free a slot.`)
+      lines.push(`Limit: ${limit}.`)
     }
   }
   const code = errorCodeLabel(error)

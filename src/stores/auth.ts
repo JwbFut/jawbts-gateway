@@ -847,11 +847,11 @@ export const useAuthStore = defineStore('auth', () => {
 
   /**
    * Revokes one of the user's sessions by the id shown by the `sessions`
-   * command. The current refresh child is recognised directly; for any other
-   * id (including a login parent) the store confirms against the live list
-   * before deciding whether this device just signed itself out.
-   * `checkCurrent: false` skips that follow-up read when the caller knows the
-   * target cannot be the current login.
+   * command. The current login root is recognised directly; for any other id
+   * (a legacy `GITHUB_LOGIN` parent or a delegated token) the store confirms
+   * against the live list before deciding whether this device just signed
+   * itself out. `checkCurrent: false` skips that follow-up read when the
+   * caller knows the target cannot be the current login.
    */
   async function revokeSession(
     sessionId: string,
@@ -865,7 +865,7 @@ export const useAuthStore = defineStore('auth', () => {
     const currentSid = currentSessionId.value
     let wasCurrent = currentSid !== null && id === currentSid
     if (!wasCurrent && options.checkCurrent !== false && currentSid !== null) {
-      // The user may have revoked the parent GITHUB_LOGIN row, which cascades
+      // The user may have revoked a legacy GITHUB_LOGIN parent, which cascades
       // to the current REFRESH_TOKEN child. Confirm against the live list.
       try {
         const list = await withAuth((token) => jawbtsApi.listSessions(token))

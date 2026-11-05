@@ -68,8 +68,11 @@ function resetState() {
     pendingEmail: null,
     loginRefreshToken: `mock-login-refresh-${randomUUID()}`,
     loginPreviousRefreshToken: null,
-    loginSessionId: 's-login-1',
-    refreshSessionId: 's-refresh-1',
+    // New API model: the login is a REFRESH_TOKEN root with no parent.
+    rootSessionId: 's-root-1',
+    // Legacy pair kept so the UI is exercised against both session shapes.
+    legacyLoginSessionId: 's-login-2',
+    legacyRefreshSessionId: 's-refresh-2',
     loginRevoked: false,
     revokedSessionIds: [],
     delegated: [],
@@ -177,13 +180,13 @@ function nowIso(offsetMs = 0) {
 function loginSessions() {
   const revoked = new Set(state.revokedSessionIds)
   if (state.loginRevoked) {
-    revoked.add(state.loginSessionId)
-    revoked.add(state.refreshSessionId)
+    revoked.add(state.rootSessionId)
   }
   return [
     {
-      id: state.loginSessionId,
-      type: 'GITHUB_LOGIN',
+      // New API model: one REFRESH_TOKEN root per login, no GITHUB_LOGIN row.
+      id: state.rootSessionId,
+      type: 'REFRESH_TOKEN',
       permissions: [],
       label: null,
       parentId: null,
@@ -191,16 +194,8 @@ function loginSessions() {
       createdAt: nowIso(-60 * 60 * 1000),
     },
     {
-      id: state.refreshSessionId,
-      type: 'REFRESH_TOKEN',
-      permissions: [],
-      label: null,
-      parentId: state.loginSessionId,
-      expiresAt: nowIso(90 * DAY),
-      createdAt: nowIso(-59 * 60 * 1000),
-    },
-    {
-      id: 's-login-2',
+      // Legacy login pair, still accepted by the API.
+      id: state.legacyLoginSessionId,
       type: 'GITHUB_LOGIN',
       permissions: [],
       label: null,
@@ -209,11 +204,11 @@ function loginSessions() {
       createdAt: nowIso(-2 * DAY),
     },
     {
-      id: 's-refresh-2',
+      id: state.legacyRefreshSessionId,
       type: 'REFRESH_TOKEN',
       permissions: [],
       label: null,
-      parentId: 's-login-2',
+      parentId: state.legacyLoginSessionId,
       expiresAt: nowIso(80 * DAY),
       createdAt: nowIso(-2 * DAY),
     },
@@ -244,7 +239,7 @@ function handleRefresh(body) {
     return { error: [10006, { message: 'Login session revoked' }] }
   }
   if (presented === state.loginRefreshToken) {
-    const token = makeAccessToken(['api', 'issue_tokens'], state.refreshSessionId, 600)
+    const token = makeAccessToken(['api', 'issue_tokens'], state.rootSessionId, 600)
     const refreshToken = rotateLoginRefresh()
     return {
       data: {
@@ -306,7 +301,9 @@ async function handle(req, res) {
       pendingEmail: state.pendingEmail,
       emailToken: EMAIL_TOKEN,
       loginRefreshToken: state.loginRefreshToken,
-      refreshSessionId: state.refreshSessionId,
+      rootSessionId: state.rootSessionId,
+      legacyLoginSessionId: state.legacyLoginSessionId,
+      legacyRefreshSessionId: state.legacyRefreshSessionId,
       delegatedCount: state.delegated.length,
     })
     return
@@ -326,7 +323,7 @@ async function handle(req, res) {
     await readBody(req)
     ok(res, {
       authUrl: 'https://github.com/login/oauth/authorize?client_id=mock-client&state=mock-state',
-      stateExpiresIn: 600,
+      stateExpiresIn: 60,
     })
     return
   }
@@ -342,7 +339,7 @@ async function handle(req, res) {
     state.loginPreviousRefreshToken = null
     ok(res, {
       refreshToken: state.loginRefreshToken,
-      sessionId: state.loginSessionId,
+      sessionId: state.rootSessionId,
       tokenType: 'Bearer',
       expiresAt: nowIso(90 * DAY),
       expiresIn: Math.floor((90 * DAY) / 1000),
@@ -424,20 +421,21 @@ async function handle(req, res) {
       fail(res, 10001, { issues: { sessionId: ['Required'] } })
       return
     }
-    const loginPairs = {
-      [state.loginSessionId]: [state.loginSessionId, state.refreshSessionId],
-      [state.refreshSessionId]: [state.loginSessionId, state.refreshSessionId],
-      's-login-2': ['s-login-2', 's-refresh-2'],
-      's-refresh-2': ['s-login-2', 's-refresh-2'],
+    const loginTargets = {
+      // New model: the login root is revoked on its own.
+      [state.rootSessionId]: [state.rootSessionId],
+      // Legacy pair: either id removes the whole login.
+      [state.legacyLoginSessionId]: [state.legacyLoginSessionId, state.legacyRefreshSessionId],
+      [state.legacyRefreshSessionId]: [state.legacyLoginSessionId, state.legacyRefreshSessionId],
     }
-    const pair = loginPairs[sessionId]
-    if (pair) {
-      for (const id of pair) {
+    const targets = loginTargets[sessionId]
+    if (targets) {
+      for (const id of targets) {
         if (!state.revokedSessionIds.includes(id)) {
           state.revokedSessionIds.push(id)
         }
       }
-      if (pair.includes(state.loginSessionId)) {
+      if (targets.includes(state.rootSessionId)) {
         state.loginRevoked = true
       }
       ok(res, { revoked: true })

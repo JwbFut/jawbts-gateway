@@ -24,7 +24,39 @@ describe('describeErrorLines', () => {
   it('surfaces session-limit counts and missing scopes', () => {
     expect(
       describeErrorLines(apiError(10004, { active: 3, limit: 3 }, 'Session Limit Reached')),
-    ).toContain('Active sessions: 3 of 3; revoke one to free a slot.')
+    ).toContain('Active: 3 of 3.')
+
+    // The same code throttles in-flight GitHub logins, which expire on their
+    // own; do not tell the user to revoke a completed session.
+    expect(
+      describeErrorLines(
+        apiError(
+          10004,
+          {
+            message:
+              'Already 3 GitHub logins in progress (max 3); finish one or wait for it to expire',
+            active: 3,
+            limit: 3,
+          },
+          'Session Limit Reached',
+        ),
+      ),
+    ).toContain('GitHub logins in progress: 3 of 3; finish one or let it expire.')
+
+    // ...and live delegated tokens, which can be revoked.
+    expect(
+      describeErrorLines(
+        apiError(
+          10004,
+          {
+            message: 'Already 20 active delegated tokens (max 20); revoke one first',
+            active: 20,
+            limit: 20,
+          },
+          'Session Limit Reached',
+        ),
+      ),
+    ).toContain('Active delegated tokens: 20 of 20; revoke one to free a slot.')
 
     const scopeLines = describeErrorLines(
       apiError(

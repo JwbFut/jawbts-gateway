@@ -24,10 +24,19 @@ export interface UserProfile {
 
 export interface LoginStart {
   authUrl: string
+  /**
+   * Seconds the pending OAuth state stays valid (currently 60). Absent on
+   * older API builds, which allowed ten minutes.
+   */
+  stateExpiresIn?: number
 }
 
 export interface LoginComplete {
   refreshToken: string
+  /**
+   * The `REFRESH_TOKEN` login root created by the callback. It is also the
+   * session id carried by the JWT `sid` after the first refresh.
+   */
   sessionId: string
   tokenType: string
   expiresAt: string
@@ -65,6 +74,11 @@ export interface SessionInfo {
   type: SessionType
   permissions: string[]
   label: string | null
+  /**
+   * New logins are a single `REFRESH_TOKEN` root and leave this null. Older
+   * logins are a `GITHUB_LOGIN` parent with a `REFRESH_TOKEN` child pointing
+   * at it, and delegated tokens are their own roots.
+   */
   parentId: string | null
   expiresAt: string
   createdAt: string

@@ -270,6 +270,20 @@ describe('revokeSession', () => {
     expect(api.listSessions).toHaveBeenCalled()
   })
 
+  it('ends the local session when the current login root is revoked', async () => {
+    seedSession()
+    const auth = await init()
+    api.revokeSession.mockResolvedValue({ revoked: true })
+
+    const result = await auth.revokeSession('s-refresh-1')
+
+    expect(result.wasCurrent).toBe(true)
+    expect(auth.status).toBe('anonymous')
+    expect(api.revokeSession).toHaveBeenCalledWith(expect.any(String), 's-refresh-1')
+    // The JWT `sid` is the root itself, so no follow-up list read is needed.
+    expect(api.listSessions).not.toHaveBeenCalled()
+  })
+
   it('leaves the local session alone when a delegated id is revoked', async () => {
     seedSession()
     const auth = await init()
@@ -284,6 +298,27 @@ describe('revokeSession', () => {
       createdAt: new Date().toISOString(),
     }
     api.listSessions.mockResolvedValue({ sessions: [currentSession] })
+
+    const result = await auth.revokeSession('s-delegated-1')
+
+    expect(result.wasCurrent).toBe(false)
+    expect(auth.status).toBe('authenticated')
+  })
+
+  it('keeps a root login alive when a delegated token is revoked', async () => {
+    seedSession()
+    const auth = await init()
+    api.revokeSession.mockResolvedValue({ revoked: true })
+    const currentRoot: SessionInfo = {
+      id: 's-refresh-1',
+      type: 'REFRESH_TOKEN',
+      permissions: [],
+      label: null,
+      parentId: null,
+      expiresAt: new Date(Date.now() + 1000).toISOString(),
+      createdAt: new Date().toISOString(),
+    }
+    api.listSessions.mockResolvedValue({ sessions: [currentRoot] })
 
     const result = await auth.revokeSession('s-delegated-1')
 
