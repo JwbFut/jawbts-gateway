@@ -36,7 +36,7 @@ export const BUILT_IN_ALLOWED_HOSTS: readonly AllowedHostRule[] = [
   // Exact callback host for one Chrome extension. Do not trust all of
   // chromiumapp.org or subdomains of this host.
   {
-    host: 'odmbeiacmbcldnhlmgnpggclajmpebhh.chromiumapp.org',
+    host: 'oacjdflkiecoclphcfdopfoingkhbomm.chromiumapp.org',
     includeSubdomains: false,
     allowHttp: false,
   },
