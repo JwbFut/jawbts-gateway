@@ -16,7 +16,7 @@ describe('matchAllowedHost', () => {
   })
 
   it('trusts the Chromium extension callback host exactly, without subdomains', () => {
-    const host = 'odmbeiacmbcldnhlmgnpggclajmpebhh.chromiumapp.org'
+    const host = 'oacjdflkiecoclphcfdopfoingkhbomm.chromiumapp.org'
     expect(matchAllowedHost(host)?.matchedDomain).toBe(host)
     expect(matchAllowedHost(host)?.viaSubdomain).toBe(false)
     expect(matchAllowedHost(`evil.${host}`)).toBeNull()
